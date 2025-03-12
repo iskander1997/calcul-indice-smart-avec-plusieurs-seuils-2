@@ -18,13 +18,12 @@ class ExcelFileSelector:
     def __init__(self, master=None, callback=None):
         # Store callback function
         self.callback = callback
+        self.validation_result = None
         
         if IN_COLAB:
             # Variables for Colab implementation
             self.scores_path = None
             self.prices_path = None
-            self.thresholds = None
-            self.validation_result = None
             self.uploaded_files = {}
         else:
             # Variables for tkinter implementation
@@ -82,7 +81,7 @@ class ExcelFileSelector:
                 button_style='primary',
                 layout=widgets.Layout(width='auto', margin='20px 0 10px 0')
             )
-            self.validate_button.on_click(self.validate_inputs)
+            self.validate_button.on_click(self.handle_validate_button)
             
             # Status output area
             self.output = widgets.Output()
@@ -144,6 +143,13 @@ class ExcelFileSelector:
             with self.output:
                 self.output.clear_output()
                 print(f"Fichier sélectionné: {filename}")
+    
+    def handle_validate_button(self, button):
+        """Handler for the validate button in Colab UI"""
+        if not IN_COLAB:
+            return
+            
+        self.validate_inputs()
     
     def create_file_selector(self, parent, label_text, path_var, select_command):
         if IN_COLAB:
@@ -233,7 +239,7 @@ class ExcelFileSelector:
             self.scores_path.set(filepath)
             self.prices_path.set(filepath)
     
-    def validate_inputs(self, button=None):
+    def validate_inputs(self, *args):
         if IN_COLAB:
             with self.output:
                 self.output.clear_output()
@@ -258,20 +264,23 @@ class ExcelFileSelector:
                         raise ValueError("Tous les seuils doivent être entre 1 et 199")
                     
                     # Create result dictionary
-                    self.validation_result = {
+                    result = {
                         'prices_path': self.prices_path,
                         'scores_path': self.scores_path,
                         'thresholds': thresholds,
                         'file_content': self.uploaded_files.get(self.scores_path)
                     }
                     
+                    # Store result
+                    self.validation_result = result
+                    
                     print("Succès: Tous les fichiers et seuils sont validés!")
                     
                     # Call callback if defined
                     if self.callback:
-                        self.callback(self.validation_result)
+                        self.callback(result)
                     
-                    return self.validation_result
+                    return result
                     
                 except ValueError as e:
                     print(f"Erreur: {str(e)}")
@@ -296,20 +305,23 @@ class ExcelFileSelector:
                     raise ValueError("Tous les seuils doivent être entre 1 et 199")
                 
                 # Préparation du résultat
-                self.validation_result = {
+                result = {
                     'prices_path': self.prices_path.get(),
                     'scores_path': self.scores_path.get(),
                     'thresholds': thresholds
                 }
                 
+                # Store result
+                self.validation_result = result
+                
                 messagebox.showinfo("Succès", "Tous les fichiers et seuils sont validés!")
                 
                 # Fermer la fenêtre si un callback est défini
                 if self.callback:
-                    self.callback(self.validation_result)
+                    self.callback(result)
                 
                 self.root.quit()
-                return self.validation_result
+                return result
                 
             except ValueError as e:
                 messagebox.showerror("Erreur", str(e))
@@ -325,7 +337,7 @@ class ExcelFileSelector:
         if not IN_COLAB:
             # Run the tkinter event loop
             self.root.mainloop()
-            
+        
         return self.validation_result
 
 # Example usage function
@@ -335,7 +347,7 @@ def example_usage():
         print(f"- Seuils: {data['thresholds']}")
         print(f"- Fichier scores: {data['scores_path']}")
         
-        # Example of reading the Excel file in Colab
+        # Example of reading the Excel file
         if IN_COLAB and 'file_content' in data and data['file_content'] is not None:
             # Save temporary file
             with open('temp_excel.xlsx', 'wb') as f:
