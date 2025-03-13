@@ -256,19 +256,21 @@ def main():
     # Paths to your data files (update these to your actual file paths)
     # prices_path = r"C:\Users\HP\Desktop\cac40_trimestriel\cleandata CAC40.xlsx"
     # scores_path = r"C:\Users\HP\Desktop\cac40_trimestriel\Historique_toutes_sociétés_CAC40.xlsx"
-
-    selector = ExcelFileSelector()
-    data_paths = selector.run()
-    if data_paths:
-        prices_path = data_paths['prices_path']
-        scores_path = data_paths['scores_path']
-        #thresholds = [100,110,125,130,135,140,145]
-        thresholds = data_paths['thresholds']
-
     # Set up logging
     logging.basicConfig(level=logging.INFO, 
                         format='%(asctime)s - %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
+    selector = ExcelFileSelector()
+    data_paths = selector.run()
+    while not data_paths:
+        data_paths = selector.run()
+    if data_paths:
+        prices_path = data_paths['prices_path']
+        scores_path = data_paths['scores_path']
+        thresholds = data_paths['thresholds']
+    else:
+        logging.error("No data paths selected.")
+        return
 
     try:
         # Load data
@@ -295,7 +297,5 @@ def main():
         logging.error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    #app = ExcelFileSelector()
-    #app.run()
     main()
 
