@@ -31,7 +31,7 @@ def load_data(prices_path, scores_path):
         
         return prices_data, scores_data
     except Exception as e:
-        logging.error(f"Error loading data HAHAHA : {e}")
+        logging.error(f"Error loading data : {e}")
         raise
 
 def calculate_ponderation(scores_df, seuil):
@@ -253,25 +253,44 @@ def main():
     """
     Main function to run the SMART CAC40 analysis with multiple threshold tests.
     """
-    # Paths to your data files (update these to your actual file paths)
-    # prices_path = r"C:\Users\HP\Desktop\cac40_trimestriel\cleandata CAC40.xlsx"
-    # scores_path = r"C:\Users\HP\Desktop\cac40_trimestriel\Historique_toutes_sociétés_CAC40.xlsx"
     # Set up logging
     logging.basicConfig(level=logging.INFO, 
                         format='%(asctime)s - %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
+    
     selector = ExcelFileSelector()
-    data_paths = selector.run()
-    # while not data_paths:
-    #     data_paths = selector.run()
-    if data_paths:
-        prices_path = data_paths['prices_path']
-        scores_path = data_paths['scores_path']
-        thresholds = data_paths['thresholds']
-    else:
-        logging.error("No data paths selected.")
+    
+    try:
+        # Check if we're in Colab
+        from google.colab import files
+        print("Running in Google Colab environment")
+        print("Please use the file upload widget above, enter threshold values, and click Validate.")
+        print("After validation is successful, run the analysis by calling process_data() function.")
+        
+        # Make the selector available globally for later use
+        global file_selector
+        file_selector = selector
+        
+        # Display the UI without waiting for completion
+        data_paths = selector.run()
         return
+        
+    except ModuleNotFoundError:
+        # For local environment, proceed normally
+        data_paths = selector.run()
+        
+        if data_paths:
+            process_data(data_paths)
+        else:
+            logging.error("No data paths selected.")
+            return
 
+def process_data(data_paths):
+    """Function to process data once paths are selected"""
+    prices_path = data_paths['prices_path']
+    scores_path = data_paths['scores_path']
+    thresholds = data_paths['thresholds']
+    
     try:
         # Load data
         prices_data, scores_data = load_data(prices_path, scores_path)
@@ -280,7 +299,6 @@ def main():
         prices_data_clean = clean_price_data(prices_data)
 
         # Test multiple thresholds
-        #thresholds = [100,110,125,130,135,140,145]
         results = {}
 
         for seuil in thresholds:
@@ -298,4 +316,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
