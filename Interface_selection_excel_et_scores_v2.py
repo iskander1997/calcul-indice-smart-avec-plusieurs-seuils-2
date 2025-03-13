@@ -106,7 +106,7 @@ class ExcelFileSelector:
     
             # Fichier des Scores
             self.create_file_selector(main_frame, 
-                                    "Scores des Sociétés", 
+                                    "Choisir l'excel :", 
                                     self.scores_path, 
                                     self.select_scores_file)
             
