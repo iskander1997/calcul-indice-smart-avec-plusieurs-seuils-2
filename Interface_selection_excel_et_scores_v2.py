@@ -31,7 +31,7 @@ class ExcelFileSelector:
             self.root.title("Sélection des Fichiers Excel")
             self.root.geometry("800x600")
             
-            # Palette de couleurs moderne
+            # Palette de couleurs 
             self.colors = {
                 'background': 'ghost white',
                 'primary': 'blue4',
@@ -57,7 +57,7 @@ class ExcelFileSelector:
     def create_ui(self):
         if IN_COLAB:
             # Create Colab UI with ipywidgets
-            display(HTML("<h2 style='color: #2c3e50; text-align: center; margin-bottom: 20px;'>Sélection des Fichiers Excel</h2>"))
+            display(HTML("<h2 style='color: #ffffff ; margin-bottom: 20px;'>Sélection du Fichier Excel (historique et versions)</h2>"))
             
             # Create file upload widget for scores
             self.scores_upload = widgets.FileUpload(
@@ -71,7 +71,7 @@ class ExcelFileSelector:
             # Create threshold input widget
             self.thresholds_input = widgets.Text(
                 description='Seuils:',
-                placeholder='ex: 10, 20, 30 (valeurs entre 1 et 199)',
+                placeholder='ex: 10, 20, 30 (valeurs entre 1 et 199) Espacés par des virgules',
                 layout=widgets.Layout(width='auto', margin='10px 0')
             )
             
