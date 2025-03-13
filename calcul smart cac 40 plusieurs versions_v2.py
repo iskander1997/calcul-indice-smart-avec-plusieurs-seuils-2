@@ -262,8 +262,8 @@ def main():
                         datefmt='%Y-%m-%d %H:%M:%S')
     selector = ExcelFileSelector()
     data_paths = selector.run()
-    while not data_paths:
-        data_paths = selector.run()
+    # while not data_paths:
+    #     data_paths = selector.run()
     if data_paths:
         prices_path = data_paths['prices_path']
         scores_path = data_paths['scores_path']
