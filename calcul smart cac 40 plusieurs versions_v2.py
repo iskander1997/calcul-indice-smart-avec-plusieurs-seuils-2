@@ -249,6 +249,14 @@ def calculate_complete_smart_cac(prices_df, scores_df, seuil=125, verbose=True):
         'version_companies': version_companies
     }
 
+
+IN_COLAB = False
+try:
+    from google.colab import files
+    IN_COLAB = True
+except ModuleNotFoundError:
+    pass
+
 def main():
     """
     Main function to run the SMART CAC40 analysis with multiple threshold tests.
@@ -258,34 +266,25 @@ def main():
                         format='%(asctime)s - %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
     
-    selector = ExcelFileSelector()
-    
-    try:
-        # Check if we're in Colab
-        from google.colab import files
+    if IN_COLAB:
         print("Running in Google Colab environment")
-        print("Please use the file upload widget above, enter threshold values, and click Validate.")
-        print("After validation is successful, run the analysis by calling process_data() function.")
-        
-        # Make the selector available globally for later use
-        global file_selector
-        file_selector = selector
-        
-        # Display the UI without waiting for completion
-        data_paths = selector.run()
+        print("For Colab usage, please use this notebook approach instead:")
+        print("1. Import the script without running it: `import calcul_smart_cac_40_plusieurs_versions_v2`")
+        print("2. Call the selector interactively: `selector = calcul_smart_cac_40_plusieurs_versions_v2.ExcelFileSelector()`")
+        print("3. Display the UI: `data_paths = selector.run()`")
+        print("4. After validation, run: `calcul_smart_cac_40_plusieurs_versions_v2.run_analysis(data_paths)`")
         return
-        
-    except ModuleNotFoundError:
-        # For local environment, proceed normally
-        data_paths = selector.run()
-        
-        if data_paths:
-            process_data(data_paths)
-        else:
-            logging.error("No data paths selected.")
-            return
+    
+    selector = ExcelFileSelector()
+    data_paths = selector.run()
 
-def process_data(data_paths):
+    if data_paths:
+        run_analysis(data_paths)
+    else:
+        logging.error("No data paths selected.")
+        return
+
+def run_analysis(data_paths):
     """Function to process data once paths are selected"""
     prices_path = data_paths['prices_path']
     scores_path = data_paths['scores_path']
@@ -310,9 +309,12 @@ def process_data(data_paths):
         print("\n--- Threshold Comparison ---")
         for seuil, result in results.items():
             print(f"Threshold {seuil}: Total Period Variation = {result['total_period_variation']:.4f}%")
+        
+        return results
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+        return None
 
 if __name__ == "__main__":
     main()
