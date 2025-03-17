@@ -31,7 +31,7 @@ def load_data(prices_path, scores_path):
         
         return prices_data, scores_data
     except Exception as e:
-        logging.error(f"Error loading data HAHAHA : {e}")
+        logging.error(f"Error loading data : {e}")
         raise
 
 def calculate_ponderation(scores_df, seuil):
@@ -233,11 +233,13 @@ def calculate_complete_smart_cac(prices_df, scores_df, seuil=125, verbose=True):
     # Final DataFrame and calculations
     final_df = result_df[['Date', 'CAC 40', 'SMART CAC40', 'Total_Variation']]
     
+    smart_cac40_values = final_df['SMART CAC40']
     first_smart_cac = final_df['SMART CAC40'].iloc[0]
     last_smart_cac = final_df['SMART CAC40'].iloc[-1]
     total_period_variation = (last_smart_cac / first_smart_cac - 1) * 100
     
     # Logging final results
+    logger.info(f"smart_cac40_values: {smart_cac40_values}")
     logger.info(f"First SMART CAC40 Value: {first_smart_cac:.4f}")
     logger.info(f"Last SMART CAC40 Value: {last_smart_cac:.4f}")
     logger.info(f"Total Period Variation: {total_period_variation:.4f}%")
@@ -245,31 +247,52 @@ def calculate_complete_smart_cac(prices_df, scores_df, seuil=125, verbose=True):
     return {
         'dataframe': final_df,
         'seuil': seuil,
+        'smart_cac40_values': smart_cac40_values,
         'total_period_variation': total_period_variation,
         'version_companies': version_companies
     }
+
+
+IN_COLAB = False
+try:
+    from google.colab import files
+    IN_COLAB = True
+except ModuleNotFoundError:
+    pass
 
 def main():
     """
     Main function to run the SMART CAC40 analysis with multiple threshold tests.
     """
-    # Paths to your data files (update these to your actual file paths)
-    # prices_path = r"C:\Users\HP\Desktop\cac40_trimestriel\cleandata CAC40.xlsx"
-    # scores_path = r"C:\Users\HP\Desktop\cac40_trimestriel\Historique_toutes_sociétés_CAC40.xlsx"
-
-    selector = ExcelFileSelector()
-    data_paths = selector.run()
-    if data_paths:
-        prices_path = data_paths['prices_path']
-        scores_path = data_paths['scores_path']
-        #thresholds = [100,110,125,130,135,140,145]
-        thresholds = data_paths['thresholds']
-
     # Set up logging
     logging.basicConfig(level=logging.INFO, 
                         format='%(asctime)s - %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
+    
+    if IN_COLAB:
+        print("Running in Google Colab environment")
+        print("For Colab usage, please use this notebook approach instead:")
+        print("1. Import the script without running it: `import calcul_smart_cac_40_plusieurs_versions_v2`")
+        print("2. Call the selector interactively: `selector = calcul_smart_cac_40_plusieurs_versions_v2.ExcelFileSelector()`")
+        print("3. Display the UI: `data_paths = selector.run()`")
+        print("4. After validation, run: `calcul_smart_cac_40_plusieurs_versions_v2.run_analysis(data_paths)`")
+        return
+    
+    selector = ExcelFileSelector()
+    data_paths = selector.run()
 
+    if data_paths:
+        run_analysis(data_paths)
+    else:
+        logging.error("No data paths selected.")
+        return
+
+def run_analysis(data_paths):
+    """Function to process data once paths are selected"""
+    prices_path = data_paths['prices_path']
+    scores_path = data_paths['scores_path']
+    thresholds = data_paths['thresholds']
+    
     try:
         # Load data
         prices_data, scores_data = load_data(prices_path, scores_path)
@@ -278,7 +301,6 @@ def main():
         prices_data_clean = clean_price_data(prices_data)
 
         # Test multiple thresholds
-        #thresholds = [100,110,125,130,135,140,145]
         results = {}
 
         for seuil in thresholds:
@@ -290,12 +312,13 @@ def main():
         print("\n--- Threshold Comparison ---")
         for seuil, result in results.items():
             print(f"Threshold {seuil}: Total Period Variation = {result['total_period_variation']:.4f}%")
+        
+        return results
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+        return None
 
 if __name__ == "__main__":
-    #app = ExcelFileSelector()
-    #app.run()
     main()
 

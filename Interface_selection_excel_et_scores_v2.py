@@ -334,8 +334,10 @@ class ExcelFileSelector:
         # Create and display the UI
         self.create_ui()
         
-        if not IN_COLAB:
+        if IN_COLAB:
             # Run the tkinter event loop
+            return None
+        else:
             self.root.mainloop()
         
         return self.validation_result
